@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripAI - AI 여행 플래너</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- 네비게이션 -->
+    <nav class="navbar">
+        <div class="nav-logo">✈️ TripAI</div>
+        <ul class="nav-menu">
+            <li><a href="#home">홈</a></li>
+            <li><a href="#recommend">여행지 추천</a></li>
+            <li><a href="#restaurant">맛집 검색</a></li>
+        </ul>
+    </nav>
+
+    <!-- 1️⃣ 히어로 섹션 -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>AI가 추천하는<br>나만의 여행 플래너</h1>
+            <p>취향과 일정을 입력하면<br>AI가 최적의 여행 코스를 만들어드려요</p>
+            <a href="#recommend" class="btn-main">여행지 추천 받기 →</a>
+        </div>
+    </section>
+
+    <!-- 2️⃣ 여행지 추천 섹션 -->
+    <section id="recommend" class="section">
+        <h2 class="section-title">🗺️ AI 여행지 추천</h2>
+        <p class="section-sub">원하는 여행 스타일을 알려주세요</p>
+
+        <div class="card-container">
+            <div class="input-group">
+                <input type="text" id="travel-input" 
+                       placeholder="예) 제주도 3박4일 가족여행" 
+                       class="input-box">
+                <button onclick="getRecommendation()" class="btn-sub">AI 추천 받기</button>
+            </div>
+            <div id="recommend-result" class="result-box hidden">
+                <p id="recommend-text"></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3️⃣ 맛집 검색 섹션 -->
+    <section id="restaurant" class="section section-gray">
+        <h2 class="section-title">🍽️ 맛집 검색</h2>
+        <p class="section-sub">여행지의 맛집을 찾아보세요</p>
+
+        <div class="card-container">
+            <div class="input-group">
+                <input type="text" id="restaurant-input" 
+                       placeholder="예) 부산 해운대 맛집" 
+                       class="input-box">
+                <button onclick="searchRestaurant()" class="btn-sub">맛집 찾기</button>
+            </div>
+            <div id="restaurant-result" class="result-box hidden">
+                <p id="restaurant-text"></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <p>© 2025 TripAI | AI 여행 플래너</p>
+        <p>20-60대를 위한 스마트 여행 서비스</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
