@@ -1,3 +1,11 @@
 {
-  "version": 2
+  "version": 2,
+  "functions": {
+    "api/recommend.py": {
+      "runtime": "python3.9"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/recommend", "destination": "/api/recommend.py" }
+  ]
 }
