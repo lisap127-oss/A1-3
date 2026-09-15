@@ -3,7 +3,7 @@
 취향·일정을 입력하면 Groq LLM 이 여행 코스와 맛집을 추천하는 정적 웹 + Vercel Python 서버리스 함수 프로젝트.
 - 배포 URL: https://a1-3-ten.vercel.app/  
 - 서비스 기획서: [서비스기획서.md](서비스기획서.md)  
-- 증빙 자료(스크린샷): [screenshots/](./screenshot)  
+- 증빙 자료(스크린샷): screenshots 폴더
 
 ```
 index.html / css/ / js/    정적 프론트엔드
