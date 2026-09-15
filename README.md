@@ -26,7 +26,7 @@ npm i -g vercel && vercel dev   # http://localhost:3000  (정적 + /api 함수 �
    `vercel.json` 의 `builds` 가 있는 동안 대시보드의 Build & Development Settings 는 무시된다 —
    이 저장소에서 `builds` 를 제거한 커밋(cc18132 이후)은 전부 배포 실패했으므로 유지한다.
    legacy `builds` 모드에서는 함수 경로에 확장자가 붙으므로(`/api/recommend.py`) routes 로 `/api/recommend` 를 매핑한다.
-4. **모델**: 기본 `llama-3.1-8b-instant`. 바꾸려면 환경변수 `GROQ_MODEL` 설정.
+4. **모델**: 기본 `openai/gpt-oss-120b` (2026-09 기준 이 Groq 계정에 Llama 계열 없음). 바꾸려면 환경변수 `GROQ_MODEL` 설정.
 
 ## API
 

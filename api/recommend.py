@@ -5,10 +5,12 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler
 
 GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
-# llama3-8b-8192 은 2025-08-30 퇴역 → 공식 대체 모델
-DEFAULT_MODEL = 'llama-3.1-8b-instant'
+# llama3-8b-8192(2025-08-30 퇴역)·llama-3.1-8b-instant(이 계정에서 model_not_found) 모두 불가.
+# 2026-09-15 /v1/models 실측: 한국어 품질·속도 최상은 openai/gpt-oss-120b (환경변수 GROQ_MODEL 로 변경 가능)
+DEFAULT_MODEL = 'openai/gpt-oss-120b'
 
 SYSTEM_PROMPT = """당신은 친절한 한국어 여행 플래너입니다. 반드시 한국어로 답합니다.
+마크다운 표·헤딩(#)·굵게(**) 를 쓰지 말고, 줄바꿈과 '-' 목록만으로 답하세요 (화면이 일반 텍스트로 표시됩니다).
 
 - 여행 일정 요청이면 다음 형식으로 답하세요:
   - 1일차: 오전/오후/저녁 일정
@@ -25,7 +27,7 @@ def ask_groq(api_key, user_input):
             {'role': 'system', 'content': SYSTEM_PROMPT},
             {'role': 'user', 'content': user_input},
         ],
-        'max_tokens': 1024,
+        'max_tokens': 1500,
     }).encode('utf-8')
 
     req = urllib.request.Request(
