@@ -1,66 +1,95 @@
 import json
 import os
+import urllib.error
 import urllib.request
+from http.server import BaseHTTPRequestHandler
 
-def handler(request):
-    # OPTIONS (CORS 프리플라이트)
-    if request.method == 'OPTIONS':
-        return Response('', status=200, headers={
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-        })
+GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
+# llama3-8b-8192 은 2025-08-30 퇴역 → 공식 대체 모델
+DEFAULT_MODEL = 'llama-3.1-8b-instant'
 
-    if request.method != 'POST':
-        return Response(json.dumps({'error': 'Method not allowed'}), status=405, headers={
-            'Content-Type': 'application/json'
-        })
+SYSTEM_PROMPT = """당신은 친절한 한국어 여행 플래너입니다. 반드시 한국어로 답합니다.
 
-    try:
-        data = request.json()
-        user_input = data.get('message', '')
+- 여행 일정 요청이면 다음 형식으로 답하세요:
+  - 1일차: 오전/오후/저녁 일정
+  - 2일차: 오전/오후/저녁 일정 (요청한 일수만큼)
+  - 맛집 추천
+  - 여행 팁
+- 맛집 검색 요청이면 지역 대표 맛집 3~5곳을 이름·위치·대표 메뉴·가격대와 함께 목록으로 답하세요."""
 
-        api_key = os.environ.get('GROQ_API_KEY', '')
-        if not api_key:
-            return Response(json.dumps({'error': 'API 키가 없습니다'}), status=500, headers={
-                'Content-Type': 'application/json'
-            })
 
-        prompt = f"""당신은 친절한 여행 플래너입니다.
-사용자 요청: {user_input}
+def ask_groq(api_key, user_input):
+    payload = json.dumps({
+        'model': os.environ.get('GROQ_MODEL', DEFAULT_MODEL),
+        'messages': [
+            {'role': 'system', 'content': SYSTEM_PROMPT},
+            {'role': 'user', 'content': user_input},
+        ],
+        'max_tokens': 1024,
+    }).encode('utf-8')
 
-다음 형식으로 여행 일정을 추천해주세요:
-- 1일차: 오전/오후/저녁 일정
-- 2일차: 오전/오후/저녁 일정
-- 맛집 추천
-- 여행 팁"""
-
-        payload = json.dumps({
-            "model": "llama3-8b-8192",
-            "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 1024
-        }).encode('utf-8')
-
-        req = urllib.request.Request(
-            'https://api.groq.com/openai/v1/chat/completions',
-            data=payload,
-            headers={
-                'Authorization': f'Bearer {api_key}',
-                'Content-Type': 'application/json'
-            }
-        )
-
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read())
-            answer = result['choices'][0]['message']['content']
-
-            return Response(json.dumps({'result': answer}, ensure_ascii=False), status=200, headers={
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-            })
-
-    except Exception as e:
-        return Response(json.dumps({'error': str(e)}), status=500, headers={
+    req = urllib.request.Request(
+        GROQ_URL,
+        data=payload,
+        headers={
+            'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-        })
+            # 기본 UA(Python-urllib/x.y)는 Cloudflare 가 403(error 1010)으로 차단한다
+            'User-Agent': 'TripAI/1.0',
+        },
+    )
+    with urllib.request.urlopen(req, timeout=25) as response:
+        result = json.loads(response.read())
+    return result['choices'][0]['message']['content']
+
+
+# Vercel Python 런타임 규약: /api/*.py 는 BaseHTTPRequestHandler 를 상속한
+# 최상위 클래스 `handler` 를 정의해야 한다. api/recommend.py → /api/recommend
+class handler(BaseHTTPRequestHandler):
+
+    def _send_json(self, status, body):
+        data = json.dumps(body, ensure_ascii=False).encode('utf-8')
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(data)))
+        self._cors()
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _cors(self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self._cors()
+        self.end_headers()
+
+    def do_GET(self):
+        self._send_json(405, {'error': 'POST 요청만 지원합니다'})
+
+    def do_POST(self):
+        length = int(self.headers.get('Content-Length') or 0)
+        try:
+            data = json.loads(self.rfile.read(length) or b'{}')
+        except json.JSONDecodeError:
+            return self._send_json(400, {'error': '잘못된 JSON 요청입니다'})
+
+        user_input = (data.get('message') or '').strip()
+        if not user_input:
+            return self._send_json(400, {'error': '여행 정보를 입력해주세요'})
+
+        api_key = os.environ.get('GROQ_API_KEY', '').strip()
+        if not api_key:
+            return self._send_json(500, {'error': 'GROQ_API_KEY 환경변수가 설정되지 않았습니다'})
+
+        try:
+            answer = ask_groq(api_key, user_input)
+        except urllib.error.HTTPError as e:
+            detail = e.read().decode('utf-8', 'replace')[:500]
+            return self._send_json(502, {'error': f'Groq API 오류 ({e.code})', 'detail': detail})
+        except Exception as e:
+            return self._send_json(500, {'error': str(e)})
+
+        self._send_json(200, {'result': answer})

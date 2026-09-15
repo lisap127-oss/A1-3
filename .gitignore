@@ -15,3 +15,5 @@ venv/
 # 시스템 파일
 .DS_Store
 Thumbs.db
+# 로컬 도구 상태
+.omc/

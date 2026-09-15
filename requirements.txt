@@ -1,3 +1,2 @@
-groq
-requests
-python-dotenv
+# 런타임 의존성 없음 — api/recommend.py 는 Python 표준 라이브러리만 사용한다.
+# (웹 프레임워크를 추가하면 Vercel 이 framework preset 으로 감지하여 /api 파일 기반 함수가 비활성화됨)
