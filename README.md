@@ -5,7 +5,7 @@
 ```
 index.html / css/ / js/    정적 프론트엔드
 api/recommend.py           POST /api/recommend  → Groq chat completions (표준 라이브러리만 사용)
-vercel.json                Vercel 설정 (파일 기반 라우팅이라 rewrite 불필요)
+vercel.json                Vercel 설정 — 명시적 builds/routes (대시보드 빌드 설정과 무관하게 배포되도록)
 .env.example               필요한 환경변수 목록
 ```
 
@@ -23,6 +23,9 @@ npm i -g vercel && vercel dev   # http://localhost:3000  (정적 + /api 함수 �
 2. **공개 접근**: Settings → Deployment Protection → *Vercel Authentication* 을 끄지 않으면
    `*.vercel.app` 주소가 Vercel 로그인 화면(302)으로 리다이렉트된다.
 3. **배포 트리거**: GitHub `main` 에 push 하면 Vercel 이 자동 배포한다 (Git 연동).
+   `vercel.json` 의 `builds` 가 있는 동안 대시보드의 Build & Development Settings 는 무시된다 —
+   이 저장소에서 `builds` 를 제거한 커밋(cc18132 이후)은 전부 배포 실패했으므로 유지한다.
+   legacy `builds` 모드에서는 함수 경로에 확장자가 붙으므로(`/api/recommend.py`) routes 로 `/api/recommend` 를 매핑한다.
 4. **모델**: 기본 `llama-3.1-8b-instant`. 바꾸려면 환경변수 `GROQ_MODEL` 설정.
 
 ## API
