@@ -4,7 +4,7 @@ date: 2026-09-15
 project: A1-3 (TripAI)
 repo: https://github.com/lisap127-oss/A1-3
 vercel_scope: pys2
-status: 배포 성공 · 공개 접근은 계정 보유자 조치 대기
+status: 완료 — 프로덕션 공개 접근·API 실호출 200 검증
 tags: [vercel, python-runtime, groq, deployment]
 ---
 
@@ -118,3 +118,22 @@ curl -X POST https://a1-3-pys2.vercel.app/api/recommend \
 - /Users/woo/cody/README.md
 - /Users/woo/cody/.env.example
 - /Users/woo/cody/docs/reports/260915-vercel-deploy-fix-report.md
+
+
+## 9. 2차 작업 (Vercel 토큰으로 직접 처리 · 2026-09-15 오후)
+
+| 항목 | 이전 | 조치 후 |
+|---|---|---|
+| Framework Preset (a1-3) | `python` — zero-config 즉시 실패의 근본 원인 | `Other`(null) |
+| 환경변수 | `groqkey` (코드가 읽지 않는 이름, 실수 버전) | `GROQ_API_KEY` (production·preview·development) · `groqkey` 삭제 |
+| 모델 | `llama-3.1-8b-instant` → Groq `404 model_not_found` | `openai/gpt-oss-120b` (계정 사용 가능 모델 실측 후 한국어 품질·1.3s 기준 선택) |
+| 중복 프로젝트 `trip-ai` | push 마다 2회 배포 | 삭제 (HTTP 204) |
+| Deployment Protection | (계정 보유자가 해제) | 3 alias 모두 200 |
+
+### 최종 실측 (커밋 1b54d49 이후)
+- `GET https://a1-3-pys2.vercel.app/` → 200, `<title>TripAI - AI 여행 플래너</title>`
+- `POST /api/recommend {"message":"제주도 3박4일 가족여행"}` → **200**, 1,214자 한국어 일정
+- `POST /api/recommend {"message":"부산 해운대 맛집 추천해줘"}` → **200**, 맛집 5곳 목록
+
+### 정본 접근 주소
+- https://a1-3-pys2.vercel.app  (동일 배포: https://a1-3-ten.vercel.app · https://a1-3-git-main-pys2.vercel.app)

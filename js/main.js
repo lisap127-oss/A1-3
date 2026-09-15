@@ -59,6 +59,7 @@ function searchRestaurant() {
 // ===== 4. 결과 텍스트 포맷 (HTML 이스케이프 후 줄바꿈만 <br>) =====
 function formatResult(text) {
     const escaped = String(text ?? '')
+        .replace(/\*\*/g, '')          // 모델이 간혹 넣는 마크다운 굵게 표식 제거
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
